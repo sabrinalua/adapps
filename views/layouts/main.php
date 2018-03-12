@@ -53,7 +53,7 @@ AppAsset::register($this);
       $menuItems2[] = '<li>'
               . Html::beginForm(['/site/logout'], 'post')
               . Html::submitButton(
-                  'Logout ('.Yii::$app->user->identity->username.')',
+                  'Logout ('.Yii::$app->user->identity->login_id.')',
                   ['class' => 'btn btn-link logout']
               )
               . Html::endForm()

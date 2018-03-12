@@ -2,105 +2,97 @@
 
 namespace app\models;
 
-class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
+use Yii;
+
+/**
+ * This is the model class for table "user".
+ *
+ * @property integer $id
+ * @property string $login_id
+ * @property string $access_level
+ * @property string $password
+ */
+class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 {
-    public $id;
-    public $username;
-    public $password;
-    public $authKey;
-    public $accessToken;
+    // public $ADMIN = 'admin';
+    // public $USER = 'user';
 
-    private static $users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            'password' => 'admin',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            'password' => 'demo',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
-
-
+    public $ADMIN= 5;
+    public $USER =1;
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
-    public static function findIdentity($id)
+    public static function tableName()
     {
-        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+        return 'admin_user';
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
-    public static function findIdentityByAccessToken($token, $type = null)
+    public function rules()
     {
-        foreach (self::$users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return [
+            [['login_id', 'access_level', 'password'], 'required'],
+            [['access_level'], 'string'],
+            [['login_id'], 'string', 'max' => 8],
+            [['password'], 'string', 'max' => 32],
+        ];
     }
 
     /**
-     * Finds user by username
-     *
-     * @param string $username
-     * @return static|null
+     * @inheritdoc
      */
-    public static function findByUsername($username)
+    public function attributeLabels()
     {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return [
+            'id' => 'ID',
+            'login_id' => 'Login ID',
+            'access_level' => 'Access Level',
+            'password' => 'Password',
+        ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getId()
-    {
+    public static function findIdentity($id){
+        return static::findOne($id);
+    }
+
+    public static function findByUsername($username){
+        return static::findOne(['login_id' => $username]);
+    }
+
+    public function validatePassword($password){
+        return $this->password === $password;
+        //if password is hashed use $this->password === md5($password)
+        // return Yii::$app->security->validatePassword($password, $this->password_hash);
+    }
+
+    public static function findIdentityByAccessToken($token, $type = null){
+        // throw new NotSupportedException();
+        $query = new \yii\db\Query();
+        $query->select(['user.*'])
+        ->from('user')
+        ->join('LEFT JOIN', 'user_org_link', 'user.id=user_org_link.user_id')
+        ->where(['user_org_link.role_subtitle'=>$token]);
+        $command = $query->createCommand();
+        $data = $command->queryAll();
+        return $data;
+    // return static::findOne(['access_token' => $token]);
+    }
+
+    public function getId(){
         return $this->id;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getAuthKey()
-    {
-        // return null;
-        return $this->authKey;
-
+    public function getAccess(){
+        return $this->access_level;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function validateAuthKey($authKey)
-    {
+    public function getAuthKey(){
+        return null;
+    }
+
+    public function validateAuthKey($authKey){
         return $this->authKey === $authKey;
-    }
-
-    /**
-     * Validates password
-     *
-     * @param string $password password to validate
-     * @return bool if password provided is valid for current user
-     */
-    public function validatePassword($password)
-    {
-        return $this->password === $password;
     }
 }
