@@ -4,10 +4,11 @@ namespace app\controllers;
 
 use Yii;
 use app\models\TblList;
-use yii\data\ActiveDataProvider;
+use app\models\Listearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\filters\AccessControl;
 
 /**
  * ListController implements the CRUD actions for TblList model.
@@ -17,27 +18,21 @@ class ListController extends Controller
     /**
      * @inheritdoc
      */
-    public function behaviors()
-    {
-        return [
-            'verbs' => [
-                'class' => VerbFilter::className(),
-                'actions' => [
-                    'delete' => ['POST'],
-                ],
-            ],
-        ];
-    }
-
-    public function actions()
-    {
-        $actions = parent::actions();
-
-        // disable the "delete" and "create" actions
-        unset($actions['delete'], $actions['create']);
-
-        return $actions;
-    }
+     public function behaviors()
+       {
+           return [
+               'access' => [
+                   'class' => AccessControl::className(),
+                   'rules' => [
+                       [
+                           'allow' => true,
+                           'actions' => ['view','update','delete','create','index'],
+                           'roles' => ['@'],
+                       ],
+                   ],
+               ],
+           ];
+       }
 
     /**
      * Lists all TblList models.
@@ -45,11 +40,11 @@ class ListController extends Controller
      */
     public function actionIndex()
     {
-        $dataProvider = new ActiveDataProvider([
-            'query' => TblList::find(),
-        ]);
+        $searchModel = new Listearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
         return $this->render('index', [
+            'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }

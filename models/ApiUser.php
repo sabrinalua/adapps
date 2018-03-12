@@ -28,7 +28,7 @@ class ApiUser extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['email', 'password', 'token'], 'required'],
+            [['email', 'password'], 'required'],
             [['email'], 'string', 'max' => 60],
             [['password'], 'string', 'max' => 30],
             [['token'], 'string', 'max' => 100],

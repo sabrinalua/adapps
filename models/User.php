@@ -80,7 +80,9 @@ class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
      */
     public function getAuthKey()
     {
+        // return null;
         return $this->authKey;
+
     }
 
     /**

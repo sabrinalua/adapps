@@ -4,42 +4,43 @@ namespace app\controllers;
 
 use Yii;
 use app\models\ApiUser;
-use yii\data\ActiveDataProvider;
+use app\models\UserSeach;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\filters\AccessControl;
 
 /**
  * UserController implements the CRUD actions for ApiUser model.
  */
 class UserController extends Controller
 {
-    /**
-     * @inheritdoc
-     */
-    public function behaviors()
+  public function behaviors()
     {
         return [
-            'verbs' => [
-                'class' => VerbFilter::className(),
-                'actions' => [
-                    // 'delete' => ['POST'],
+            'access' => [
+                'class' => AccessControl::className(),
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'actions' => ['view','update','delete','create','index'],
+                        'roles' => ['@'],
+                    ],
                 ],
             ],
         ];
     }
-
     /**
      * Lists all ApiUser models.
      * @return mixed
      */
     public function actionIndex()
     {
-        $dataProvider = new ActiveDataProvider([
-            'query' => ApiUser::find(),
-        ]);
+        $searchModel = new UserSeach();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
         return $this->render('index', [
+            'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
